@@ -6,22 +6,27 @@
 #include <vulkan/vulkan.h>
 
 // std lib headers
+#include <memory>
 #include <string>
 #include <vector>
 
 namespace vkEngine {
 
 class VkEngineSwapChain {
- public:
+public:
   static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
   VkEngineSwapChain(VkEngineDevice &deviceRef, VkExtent2D windowExtent);
+  VkEngineSwapChain(VkEngineDevice &deviceRef, VkExtent2D windowExtent,
+                    std::shared_ptr<VkEngineSwapChain> previous);
   ~VkEngineSwapChain();
 
   VkEngineSwapChain(const VkEngineSwapChain &) = delete;
-  VkEngineSwapChain& operator=(const VkEngineSwapChain &) = delete;
+  VkEngineSwapChain &operator=(const VkEngineSwapChain &) = delete;
 
-  VkFramebuffer getFrameBuffer(int index) { return swapChainFramebuffers[index]; }
+  VkFramebuffer getFrameBuffer(int index) {
+    return swapChainFramebuffers[index];
+  }
   VkRenderPass getRenderPass() { return renderPass; }
   VkImageView getImageView(int index) { return swapChainImageViews[index]; }
   size_t imageCount() { return swapChainImages.size(); }
@@ -31,14 +36,17 @@ class VkEngineSwapChain {
   uint32_t height() { return swapChainExtent.height; }
 
   float extentAspectRatio() {
-    return static_cast<float>(swapChainExtent.width) / static_cast<float>(swapChainExtent.height);
+    return static_cast<float>(swapChainExtent.width) /
+           static_cast<float>(swapChainExtent.height);
   }
   VkFormat findDepthFormat();
 
   VkResult acquireNextImage(uint32_t *imageIndex);
-  VkResult submitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex);
+  VkResult submitCommandBuffers(const VkCommandBuffer *buffers,
+                                uint32_t *imageIndex);
 
- private:
+private:
+  void init();
   void createSwapChain();
   void createImageViews();
   void createDepthResources();
@@ -69,6 +77,7 @@ class VkEngineSwapChain {
   VkExtent2D windowExtent;
 
   VkSwapchainKHR swapChain;
+  std::shared_ptr<VkEngineSwapChain> oldSwapchain;
 
   std::vector<VkSemaphore> imageAvailableSemaphores;
   std::vector<VkSemaphore> renderFinishedSemaphores;
@@ -77,4 +86,4 @@ class VkEngineSwapChain {
   size_t currentFrame = 0;
 };
 
-}  // namespace lve
+} // namespace vkEngine

@@ -72,6 +72,10 @@ void App::createPipelineLayout() {
 }
 
 void App::createPipeline() {
+  assert(vkEngineSwapChain!= nullptr && "Cannot create pipeline before swap chain");
+  assert(pipelineLayout != nullptr &&
+         "Cannot create pipeline before pipeline layout");
+
   PipelineConfigInfo pipelineConfig{};
   Pipeline::defaultPipelineConfigInfo(pipelineConfig);
   pipelineConfig.renderPass = vkEngineSwapChain->getRenderPass();
@@ -86,10 +90,19 @@ void App::recreateSwapchain() {
     extent = window.getExtent();
     glfwWaitEvents();
   }
-
   vkDeviceWaitIdle(vkEngineDevice.device());
-  vkEngineSwapChain =
-      std::make_unique<VkEngineSwapChain>(vkEngineDevice, extent);
+
+  if (vkEngineSwapChain == nullptr) {
+    vkEngineSwapChain =
+        std::make_unique<VkEngineSwapChain>(vkEngineDevice, extent);
+  } else {
+    vkEngineSwapChain = std::make_unique<VkEngineSwapChain>(
+        vkEngineDevice, extent, std::move(vkEngineSwapChain));
+    if (vkEngineSwapChain->imageCount() != commandBuffers.size()) {
+      freeCommandBuffers();
+      createCommandBuffers();
+    }
+  }
   createPipeline();
 }
 
@@ -106,6 +119,13 @@ void App::createCommandBuffers() {
                                commandBuffers.data()) != VK_SUCCESS) {
     throw std::runtime_error("failed to allocate command buffers!");
   }
+}
+
+void App::freeCommandBuffers() {
+  vkFreeCommandBuffers(vkEngineDevice.device(), vkEngineDevice.getCommandPool(),
+                       static_cast<uint32_t>(commandBuffers.size()),
+                       commandBuffers.data());
+  commandBuffers.clear();
 }
 
 void App::recordCommandBuffer(int imageIndex) {
