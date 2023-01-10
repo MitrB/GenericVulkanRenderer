@@ -5,6 +5,7 @@
 #include "pipeline.hpp"
 #include "swap_chain.hpp"
 #include "window.hpp"
+#include "game_object.hpp"
 
 // std
 #include <memory>
@@ -26,7 +27,7 @@ public:
   void run();
 
 private:
-  void loadModels();
+  void loadGameObjects();
   void createPipelineLayout();
   void createPipeline();
   void createCommandBuffers();
@@ -34,6 +35,7 @@ private:
   void drawFrame();
   void recreateSwapchain();
   void recordCommandBuffer(int imageIndex);
+  void renderGameObjects(VkCommandBuffer commandBuffer);
 
   void sierpinski(
     std::vector<Model::Vertex> &vertices,
@@ -48,7 +50,7 @@ private:
   std::unique_ptr<Pipeline> pipeline;
   VkPipelineLayout pipelineLayout;
   std::vector<VkCommandBuffer> commandBuffers;
-  std::unique_ptr<Model> model;
+  std::vector<vkEngineGameObject> gameObject;
 };
 
 } // namespace vkEngine
