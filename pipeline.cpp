@@ -1,5 +1,6 @@
 #include "pipeline.hpp"
 #include "device.hpp"
+#include "model.hpp"
 
 #include <cassert>
 #include <cstddef>
@@ -73,13 +74,15 @@ void Pipeline::createGraphicsPipeline(const std::string &vertFilepath,
   shaderStages[1].pNext = nullptr;
   shaderStages[1].pSpecializationInfo = nullptr;
 
+  auto bindingDescriptions = Model::Vertex::getBindingDescriptions();
+  auto attributedescriptions = Model::Vertex::getAttributeDescriptions();
   VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
   vertexInputInfo.sType =
       VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-  vertexInputInfo.vertexAttributeDescriptionCount = 0;
-  vertexInputInfo.vertexBindingDescriptionCount = 0;
-  vertexInputInfo.pVertexAttributeDescriptions = nullptr;
-  vertexInputInfo.pVertexBindingDescriptions = nullptr;
+  vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributedescriptions.size());
+  vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescriptions.size());
+  vertexInputInfo.pVertexAttributeDescriptions = attributedescriptions.data();
+  vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data();
 
   VkPipelineViewportStateCreateInfo viewportInfo{};
   viewportInfo.sType =
@@ -131,6 +134,7 @@ void Pipeline::createShaderModule(const std::vector<char> &code,
 
 void Pipeline::bind(VkCommandBuffer commandBuffer) {
   vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+  
 }
 
 PipelineConfigInfo Pipeline::defaultPipelineConfigInfo(uint32_t width,
