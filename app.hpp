@@ -31,6 +31,9 @@ private:
   void createPipeline();
   void createCommandBuffers();
   void drawFrame();
+  void recreateSwapchain();
+  void recordCommandBuffer(int imageIndex);
+
   void sierpinski(
     std::vector<Model::Vertex> &vertices,
     int depth,
@@ -40,7 +43,7 @@ private:
 
   Window window{WIDTH, HEIGHT, "Vulkan Engine"};
   VkEngineDevice vkEngineDevice{window};
-  VkEngineSwapChain vkEngineSwapChain{vkEngineDevice, window.getExtent()};
+  std::unique_ptr<VkEngineSwapChain> vkEngineSwapChain;
   std::unique_ptr<Pipeline> pipeline;
   VkPipelineLayout pipelineLayout;
   std::vector<VkCommandBuffer> commandBuffers;

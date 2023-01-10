@@ -2,6 +2,7 @@
 #include "device.hpp"
 #include "model.hpp"
 #include "pipeline.hpp"
+#include "swap_chain.hpp"
 #include <GLFW/glfw3.h>
 #include <array>
 #include <cmath>
@@ -16,7 +17,7 @@ namespace vkEngine {
 App::App() {
   loadModels();
   createPipelineLayout();
-  createPipeline();
+  recreateSwapchain();
   createCommandBuffers();
 }
 
@@ -33,12 +34,8 @@ void App::run() {
   vkDeviceWaitIdle(vkEngineDevice.device());
 }
 
-void App::sierpinski(
-    std::vector<Model::Vertex> &vertices,
-    int depth,
-    glm::vec2 left,
-    glm::vec2 right,
-    glm::vec2 top) {
+void App::sierpinski(std::vector<Model::Vertex> &vertices, int depth,
+                     glm::vec2 left, glm::vec2 right, glm::vec2 top) {
   if (depth <= 0) {
     vertices.push_back({top});
     vertices.push_back({right});
@@ -54,10 +51,9 @@ void App::sierpinski(
 }
 
 void App::loadModels() {
-    std::vector<Model::Vertex> vertices{
-      {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-      {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-      {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
+  std::vector<Model::Vertex> vertices{{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+                                      {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+                                      {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
   model = std::make_unique<Model>(vkEngineDevice, vertices);
 }
 
@@ -76,16 +72,29 @@ void App::createPipelineLayout() {
 }
 
 void App::createPipeline() {
-  auto pipelineConfig = Pipeline::defaultPipelineConfigInfo(
-      vkEngineSwapChain.width(), vkEngineSwapChain.height());
-  pipelineConfig.renderPass = vkEngineSwapChain.getRenderPass();
+  PipelineConfigInfo pipelineConfig{};
+  Pipeline::defaultPipelineConfigInfo(pipelineConfig);
+  pipelineConfig.renderPass = vkEngineSwapChain->getRenderPass();
   pipelineConfig.pipelineLayout = pipelineLayout;
   pipeline = std::make_unique<Pipeline>(vkEngineDevice, "shaders/vert.spv",
                                         "shaders/frag.spv", pipelineConfig);
 }
 
+void App::recreateSwapchain() {
+  auto extent = window.getExtent();
+  while (extent.width == 0 || extent.height == 0) {
+    extent = window.getExtent();
+    glfwWaitEvents();
+  }
+
+  vkDeviceWaitIdle(vkEngineDevice.device());
+  vkEngineSwapChain =
+      std::make_unique<VkEngineSwapChain>(vkEngineDevice, extent);
+  createPipeline();
+}
+
 void App::createCommandBuffers() {
-  commandBuffers.resize(vkEngineSwapChain.imageCount());
+  commandBuffers.resize(vkEngineSwapChain->imageCount());
 
   VkCommandBufferAllocateInfo allocInfo{};
   allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -93,57 +102,85 @@ void App::createCommandBuffers() {
   allocInfo.commandPool = vkEngineDevice.getCommandPool();
   allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
 
-  if (vkAllocateCommandBuffers(vkEngineDevice.device(), &allocInfo, commandBuffers.data()) !=
-      VK_SUCCESS) {
+  if (vkAllocateCommandBuffers(vkEngineDevice.device(), &allocInfo,
+                               commandBuffers.data()) != VK_SUCCESS) {
     throw std::runtime_error("failed to allocate command buffers!");
-  }
-
-  for (int i = 0; i < commandBuffers.size(); i++) {
-    VkCommandBufferBeginInfo beginInfo{};
-    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-    if (vkBeginCommandBuffer(commandBuffers[i], &beginInfo) != VK_SUCCESS) {
-      throw std::runtime_error("failed to begin recording command buffer!");
-    }
-
-    VkRenderPassBeginInfo renderPassInfo{};
-    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassInfo.renderPass = vkEngineSwapChain.getRenderPass();
-    renderPassInfo.framebuffer = vkEngineSwapChain.getFrameBuffer(i);
-
-    renderPassInfo.renderArea.offset = {0, 0};
-    renderPassInfo.renderArea.extent = vkEngineSwapChain.getSwapChainExtent();
-
-    std::array<VkClearValue, 2> clearValues{};
-    clearValues[0].color = {0.1f, 0.1f, 0.1f, 1.0f};
-    clearValues[1].depthStencil = {1.0f, 0};
-    renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-    renderPassInfo.pClearValues = clearValues.data();
-
-    vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-    pipeline->bind(commandBuffers[i]);
-    model->bind(commandBuffers[i]);
-    model->draw(commandBuffers[i]);
-
-    vkCmdEndRenderPass(commandBuffers[i]);
-    if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS) {
-      throw std::runtime_error("failed to record command buffer!");
-    }
   }
 }
 
-void App::drawFrame(){
-    uint32_t imageIndex;
-    auto result = vkEngineSwapChain.acquireNextImage(&imageIndex);
+void App::recordCommandBuffer(int imageIndex) {
+  VkCommandBufferBeginInfo beginInfo{};
+  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-    if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR ) {
-        throw std::runtime_error("failed to acquire swap chain image");
-    }
+  if (vkBeginCommandBuffer(commandBuffers[imageIndex], &beginInfo) !=
+      VK_SUCCESS) {
+    throw std::runtime_error("failed to begin recording command buffer!");
+  }
 
-    result = vkEngineSwapChain.submitCommandBuffers(&commandBuffers[imageIndex], &imageIndex);
-    if (result != VK_SUCCESS) {
-        throw std::runtime_error("failed to present swapchain image");
-    }
+  VkRenderPassBeginInfo renderPassInfo{};
+  renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+  renderPassInfo.renderPass = vkEngineSwapChain->getRenderPass();
+  renderPassInfo.framebuffer = vkEngineSwapChain->getFrameBuffer(imageIndex);
+
+  renderPassInfo.renderArea.offset = {0, 0};
+  renderPassInfo.renderArea.extent = vkEngineSwapChain->getSwapChainExtent();
+
+  std::array<VkClearValue, 2> clearValues{};
+  clearValues[0].color = {0.1f, 0.1f, 0.1f, 1.0f};
+  clearValues[1].depthStencil = {1.0f, 0};
+  renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+  renderPassInfo.pClearValues = clearValues.data();
+
+  vkCmdBeginRenderPass(commandBuffers[imageIndex], &renderPassInfo,
+                       VK_SUBPASS_CONTENTS_INLINE);
+
+  VkViewport viewport{};
+  viewport.x = 0.0f;
+  viewport.y = 0.0f;
+  viewport.width =
+      static_cast<float>(vkEngineSwapChain->getSwapChainExtent().width);
+  viewport.height =
+      static_cast<float>(vkEngineSwapChain->getSwapChainExtent().height);
+  viewport.minDepth = 0.0f;
+  viewport.maxDepth = 1.0f;
+  VkRect2D scissor{{0, 0}, vkEngineSwapChain->getSwapChainExtent()};
+  vkCmdSetViewport(commandBuffers[imageIndex], 0, 1, &viewport);
+  vkCmdSetScissor(commandBuffers[imageIndex], 0, 1, &scissor);
+
+  pipeline->bind(commandBuffers[imageIndex]);
+  model->bind(commandBuffers[imageIndex]);
+  model->draw(commandBuffers[imageIndex]);
+
+  vkCmdEndRenderPass(commandBuffers[imageIndex]);
+  if (vkEndCommandBuffer(commandBuffers[imageIndex]) != VK_SUCCESS) {
+    throw std::runtime_error("failed to record command buffer!");
+  }
+}
+
+void App::drawFrame() {
+  uint32_t imageIndex;
+  auto result = vkEngineSwapChain->acquireNextImage(&imageIndex);
+
+  if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+    recreateSwapchain();
+    return;
+  }
+
+  if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+    throw std::runtime_error("failed to acquire swap chain image");
+  }
+
+  recordCommandBuffer(imageIndex);
+  result = vkEngineSwapChain->submitCommandBuffers(&commandBuffers[imageIndex],
+                                                   &imageIndex);
+  if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
+      window.wasWindowResized()) {
+    window.resetWindowResizedFlag();
+    recreateSwapchain();
+    return;
+  }
+  if (result != VK_SUCCESS) {
+    throw std::runtime_error("failed to present swapchain image");
+  }
 }
 } // namespace vkEngine

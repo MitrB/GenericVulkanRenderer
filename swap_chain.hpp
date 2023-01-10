@@ -19,7 +19,7 @@ class VkEngineSwapChain {
   ~VkEngineSwapChain();
 
   VkEngineSwapChain(const VkEngineSwapChain &) = delete;
-  void operator=(const VkEngineSwapChain &) = delete;
+  VkEngineSwapChain& operator=(const VkEngineSwapChain &) = delete;
 
   VkFramebuffer getFrameBuffer(int index) { return swapChainFramebuffers[index]; }
   VkRenderPass getRenderPass() { return renderPass; }
