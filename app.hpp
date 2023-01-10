@@ -1,7 +1,7 @@
 #pragma once
 
 #include "window.hpp"
-#include <GLFW/glfw3.h>
+#include "pipeline.hpp"
 
 namespace vkEngine {
 class App {
@@ -13,6 +13,7 @@ class App {
 
     private:
     Window window{WIDTH, HEIGHT, "Vulkan Engine"};
+    Pipeline pipeline{"shaders/vert.spv", "shaders/frag.spv"};
 };
 
 } // namespace vkEngine
