@@ -31,6 +31,12 @@ private:
   void createPipeline();
   void createCommandBuffers();
   void drawFrame();
+  void sierpinski(
+    std::vector<Model::Vertex> &vertices,
+    int depth,
+    glm::vec2 left,
+    glm::vec2 right,
+    glm::vec2 top);
 
   Window window{WIDTH, HEIGHT, "Vulkan Engine"};
   VkEngineDevice vkEngineDevice{window};
