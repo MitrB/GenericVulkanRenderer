@@ -1,25 +1,17 @@
 #include "app.hpp"
-#include "device.hpp"
-#include "game_object.hpp"
-#include "model.hpp"
-#include "pipeline.hpp"
 #include "simple_render_system.hpp"
-#include "swap_chain.hpp"
-#include <GLFW/glfw3.h>
+
+// std
 #include <array>
-#include <cmath>
 #include <cstdint>
-#include <glm/fwd.hpp>
-#include <glm/gtc/constants.hpp>
 #include <memory>
 #include <stdexcept>
-#include <vector>
-#include <vulkan/vulkan_core.h>
 
 // libs
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
+#include <glm/gtc/constants.hpp>
 
 namespace vkEngine {
 
