@@ -1,4 +1,6 @@
-CFLAGS = -std=c++17 -O2 -I.
+include .env
+
+CFLAGS = -std=c++17 -O2 -I. -I $(TOLOADER_PATH)
 LDFLAGS = -lglfw -lvulkan -ldl -lpthread -lX11 -lXxf86vm -lXrandr -lXi
 
 Vulkan: *.cpp *.hpp

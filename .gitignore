@@ -36,3 +36,5 @@
 
 #
 Vulkan
+.vscode
+*.zip
