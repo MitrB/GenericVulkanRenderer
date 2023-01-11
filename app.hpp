@@ -2,7 +2,6 @@
 
 #include "device.hpp"
 #include "model.hpp"
-#include "pipeline.hpp"
 #include "renderer.hpp"
 #include "window.hpp"
 #include "game_object.hpp"
@@ -28,9 +27,6 @@ public:
 
 private:
   void loadGameObjects();
-  void createPipelineLayout();
-  void createPipeline();
-  void renderGameObjects(VkCommandBuffer commandBuffer);
 
   void sierpinski(
     std::vector<Model::Vertex> &vertices,
@@ -42,9 +38,7 @@ private:
   Window window{WIDTH, HEIGHT, "Vulkan Engine"};
   VkEngineDevice vkEngineDevice{window};
   VkEngineRenderer vkEngineRenderer{window, vkEngineDevice};
-  std::unique_ptr<Pipeline> pipeline;
-  VkPipelineLayout pipelineLayout;
-  std::vector<vkEngineGameObject> gameObjects;
+  std::vector<VkEngineGameObject> gameObjects;
 };
 
 } // namespace vkEngine

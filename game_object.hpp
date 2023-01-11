@@ -21,13 +21,13 @@ struct Transform2dComponent {
     }
 };
 
-class vkEngineGameObject {
+class VkEngineGameObject {
     public:
     using id_t = unsigned int;
 
-    static vkEngineGameObject createGameObject() {
+    static VkEngineGameObject createGameObject() {
         static id_t currentId = 0;
-        return vkEngineGameObject{currentId++};
+        return VkEngineGameObject{currentId++};
     };
 
     id_t getId() {return id;}
@@ -36,13 +36,13 @@ class vkEngineGameObject {
     glm::vec3 color{};
     Transform2dComponent transform2d{};
 
-    vkEngineGameObject(const vkEngineGameObject &) = delete;
-    vkEngineGameObject &operator=(const vkEngineGameObject &) = delete;
-    vkEngineGameObject(vkEngineGameObject&&) = default;
-    vkEngineGameObject &operator=(vkEngineGameObject &&) = default;
+    VkEngineGameObject(const VkEngineGameObject &) = delete;
+    VkEngineGameObject &operator=(const VkEngineGameObject &) = delete;
+    VkEngineGameObject(VkEngineGameObject&&) = default;
+    VkEngineGameObject &operator=(VkEngineGameObject &&) = default;
 
     private:
-    vkEngineGameObject(id_t objId) : id{objId} {};
+    VkEngineGameObject(id_t objId) : id{objId} {};
 
     id_t id;
 };
