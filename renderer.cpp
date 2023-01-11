@@ -99,7 +99,7 @@ void VkEngineRenderer::endFrame() {
     window.resetWindowResizedFlag();
     recreateSwapchain();
   }
-  if (result != VK_SUCCESS) {
+  else if (result != VK_SUCCESS) {
     throw std::runtime_error("failed to present swapchain image");
   }
 
