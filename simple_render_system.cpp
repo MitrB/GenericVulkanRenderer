@@ -1,4 +1,5 @@
 #include "simple_render_system.hpp"
+#include "camera.hpp"
 #include <GLFW/glfw3.h>
 #include <array>
 #include <cmath>
@@ -66,7 +67,7 @@ void SimpleRenderSystem::createPipeline(VkRenderPass renderPass) {
 }
 
 
-void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::vector<VkEngineGameObject> &gameObjects) {
+void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::vector<VkEngineGameObject> &gameObjects, const VkEngineCamera &camera) {
 
   pipeline->bind(commandBuffer);
 
@@ -78,7 +79,7 @@ void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::v
 
     SimplePushConstantData push{};
     push.color = obj.color;
-    push.transform = obj.transform.mat4();
+    push.transform = camera.getProjection() * obj.transform.mat4();
 
     vkCmdPushConstants(commandBuffer, pipelineLayout,
                        VK_SHADER_STAGE_VERTEX_BIT |

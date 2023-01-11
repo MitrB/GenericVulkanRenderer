@@ -3,10 +3,12 @@
 #include "game_object.hpp"
 #include "model.hpp"
 #include "simple_render_system.hpp"
+#include "camera.hpp"
 
 // std
 #include <array>
 #include <cstdint>
+#include <glm/trigonometric.hpp>
 #include <memory>
 #include <stdexcept>
 #include <utility>
@@ -34,12 +36,18 @@ void App::run() {
   SimpleRenderSystem simpleRenderSystem(
       vkEngineDevice, vkEngineRenderer.getSwapChainrenderPass());
 
+  VkEngineCamera camera{};
+
   while (!window.shouldClose()) {
     glfwPollEvents();
+    
+    float aspect = vkEngineRenderer.getAspectRatio();
+    // camera.setOrthographicProjection(-aspect, aspect, -1, 1, -1, 1);
+    camera.setPerspectiveProjection(glm::radians(50.f), aspect, .1f, 10.f);
 
     if (auto commandBuffer = vkEngineRenderer.beginFrame()) {
       vkEngineRenderer.beginSwapChainrenderPass(commandBuffer);
-      simpleRenderSystem.renderGameObjects(commandBuffer, gameObjects);
+      simpleRenderSystem.renderGameObjects(commandBuffer, gameObjects, camera);
       vkEngineRenderer.endSwapChainrenderPass(commandBuffer);
       vkEngineRenderer.endFrame();
     }
@@ -110,8 +118,8 @@ void App::loadGameObjects() {
   std::shared_ptr<Model> cubeModel = createCubeModel(vkEngineDevice, {.0f, .0f, .0f});
   auto cube1 = VkEngineGameObject::createGameObject();
   cube1.model = cubeModel;
-  cube1.transform.translation = {.0f, .0f, .5f};
-  cube1.transform.scale = {.6f, .5f, .5f};
+  cube1.transform.translation = {.0f, .0f, 2.5f};
+  cube1.transform.scale = {.5f, .5f, .5f};
 
   // auto cube2 = VkEngineGameObject::createGameObject();
   // cube2.model = cubeModel;
