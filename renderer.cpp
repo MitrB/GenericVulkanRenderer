@@ -38,17 +38,12 @@ void VkEngineRenderer::recreateSwapchain() {
     if (!oldSwapChain->compareSwapFormats(*vkEngineSwapChain.get())) {
       throw std::runtime_error("Swap Chain image or depth format has changed");
     }
-
-    if (vkEngineSwapChain->imageCount() != commandBuffers.size()) {
-      freeCommandBuffers();
-      createCommandBuffers();
-    }
   }
   // brb
 }
 
 void VkEngineRenderer::createCommandBuffers() {
-  commandBuffers.resize(vkEngineSwapChain->imageCount());
+  commandBuffers.resize(VkEngineSwapChain::MAX_FRAMES_IN_FLIGHT);
 
   VkCommandBufferAllocateInfo allocInfo{};
   allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -112,6 +107,7 @@ void VkEngineRenderer::endFrame() {
   }
 
   isFrameStarted = false;
+  currentFrameIndex = (currentFrameIndex + 1) % VkEngineSwapChain::MAX_FRAMES_IN_FLIGHT;
 }
 void VkEngineRenderer::beginSwapChainrenderPass(VkCommandBuffer commandBuffer) {
   assert(isFrameStarted && "Can't call beginFrame while frame is not started");
