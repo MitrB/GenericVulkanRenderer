@@ -22,6 +22,7 @@ namespace vkEngine {
 
             bool wasWindowResized() {return framebufferResized;}
             void resetWindowResizedFlag() {framebufferResized = false;}
+            GLFWwindow *getGLFWwindow() const {return window;}
 
 
         private:

@@ -7,6 +7,7 @@
 #include "game_object.hpp"
 
 // std
+#include <chrono>
 #include <memory>
 #include <vector>
 #include <vulkan/vulkan_core.h>
@@ -26,6 +27,7 @@ public:
   void run();
 
 private:
+  float MAX_FRAME_TIME = 0.1f;
   void loadGameObjects();
 
   void sierpinski(
