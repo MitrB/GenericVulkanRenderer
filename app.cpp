@@ -1,4 +1,7 @@
 #include "app.hpp"
+#include "device.hpp"
+#include "game_object.hpp"
+#include "model.hpp"
 #include "simple_render_system.hpp"
 
 // std
@@ -6,6 +9,7 @@
 #include <cstdint>
 #include <memory>
 #include <stdexcept>
+#include <vector>
 
 // libs
 #define GLM_FORCE_RADIANS
@@ -15,11 +19,55 @@
 
 namespace vkEngine {
 
-App::App() { loadGameObjects(); }
+App::App() {
+  // loadGameObjects();
+}
 
 App::~App() {}
 
+std::unique_ptr<Model> createSquareModel(VkEngineDevice &device,
+                                         glm::vec2 offset) {
+  std::vector<Model::Vertex> vertices = {
+      {{-0.5f, -0.5f}}, {{0.5f, 0.5f}},  {{-0.5f, 0.5f}},
+      {{-0.5f, -0.5f}}, {{0.5f, -0.5f}}, {{0.5f, 0.5f}}, //
+  };
+  for (auto &v : vertices) {
+    v.position += offset;
+  }
+  return std::make_unique<Model>(device, vertices);
+}
+
+std::unique_ptr<Model> createCircleModel(VkEngineDevice &device,
+                                         unsigned int numSides) {
+  std::vector<Model::Vertex> uniqueVertices{};
+  for (int i = 0; i < numSides; i++) {
+    float angle = i * glm::two_pi<float>() / numSides;
+    uniqueVertices.push_back({{glm::cos(angle), glm::sin(angle)}});
+  }
+  uniqueVertices.push_back({}); // adds center vertex at 0, 0
+
+  std::vector<Model::Vertex> vertices{};
+  for (int i = 0; i < numSides; i++) {
+    vertices.push_back(uniqueVertices[i]);
+    vertices.push_back(uniqueVertices[(i + 1) % numSides]);
+    vertices.push_back(uniqueVertices[numSides]);
+  }
+  return std::make_unique<Model>(device, vertices);
+}
+
 void App::run() {
+  // Creating object to be displayed
+  std::shared_ptr<Model> squareModel =
+      createSquareModel(vkEngineDevice, {0.5, 0.f});
+  std::vector<VkEngineGameObject> squares{};
+  auto square1 = VkEngineGameObject::createGameObject();
+  square1.model = squareModel;
+  square1.color = {1.f, 1.f, 1.f};
+  square1.transform2d.rotation = 0;
+  square1.transform2d.scale = {.5f, .5f};
+
+  gameObjects.push_back(std::move(square1));
+
   SimpleRenderSystem simpleRenderSystem(
       vkEngineDevice, vkEngineRenderer.getSwapChainrenderPass());
 

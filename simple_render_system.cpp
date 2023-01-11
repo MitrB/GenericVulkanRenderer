@@ -69,18 +69,9 @@ void SimpleRenderSystem::createPipeline(VkRenderPass renderPass) {
 
 void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::vector<VkEngineGameObject> &gameObjects) {
 
- int i = 0;
-  for (auto& obj : gameObjects) {
-    i += 1;
-    obj.transform2d.rotation =
-        glm::mod<float>(obj.transform2d.rotation + 0.001f * i, 2.f * glm::pi<float>());
-  }
-
   pipeline->bind(commandBuffer);
 
   for (auto &obj : gameObjects) {
-    obj.transform2d.rotation = glm::mod(obj.transform2d.rotation + 0.01f, glm::two_pi<float>());
-
     SimplePushConstantData push{};
     push.offset = obj.transform2d.translation;
     push.color = obj.color;

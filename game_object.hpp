@@ -7,43 +7,48 @@
 namespace vkEngine {
 
 struct Transform2dComponent {
-    glm::vec2 translation;
-    glm::vec2 scale{1.f, 1.f};
-    float rotation;
+  glm::vec2 translation;
+  glm::vec2 scale{1.f, 1.f};
+  float rotation = 0;
 
-    glm::mat2 mat2() {
-        const float s = glm::sin(rotation);
-        const float c = glm::cos(rotation);
-        glm::mat2 rotMat{{c, s}, {-s, c}};
+  glm::mat2 mat2() {
+    const float s = glm::sin(rotation);
+    const float c = glm::cos(rotation);
+    glm::mat2 rotMat{{c, s}, {-s, c}};
 
-        glm::mat2 scaleMat{{scale.x, .0f}, {.0f, scale.y}};
-        return rotMat * scaleMat;
-    }
+    glm::mat2 scaleMat{{scale.x, .0f}, {.0f, scale.y}};
+    return rotMat * scaleMat;
+  }
 };
 
 class VkEngineGameObject {
-    public:
-    using id_t = unsigned int;
+public:
+  struct RigidBody2dComponent {
+    glm::vec2 velocity;
+    float mass{1.0f};
+  }; //
 
-    static VkEngineGameObject createGameObject() {
-        static id_t currentId = 0;
-        return VkEngineGameObject{currentId++};
-    };
+  using id_t = unsigned int;
 
-    id_t getId() {return id;}
+  static VkEngineGameObject createGameObject() {
+    static id_t currentId = 0;
+    return VkEngineGameObject{currentId++};
+  };
 
-    std::shared_ptr<Model> model;
-    glm::vec3 color{};
-    Transform2dComponent transform2d{};
+  id_t getId() { return id; }
 
-    VkEngineGameObject(const VkEngineGameObject &) = delete;
-    VkEngineGameObject &operator=(const VkEngineGameObject &) = delete;
-    VkEngineGameObject(VkEngineGameObject&&) = default;
-    VkEngineGameObject &operator=(VkEngineGameObject &&) = default;
+  std::shared_ptr<Model> model;
+  glm::vec3 color{};
+  Transform2dComponent transform2d{};
 
-    private:
-    VkEngineGameObject(id_t objId) : id{objId} {};
+  VkEngineGameObject(const VkEngineGameObject &) = delete;
+  VkEngineGameObject &operator=(const VkEngineGameObject &) = delete;
+  VkEngineGameObject(VkEngineGameObject &&) = default;
+  VkEngineGameObject &operator=(VkEngineGameObject &&) = default;
 
-    id_t id;
+private:
+  VkEngineGameObject(id_t objId) : id{objId} {};
+
+  id_t id;
 };
 } // namespace vkEngine
