@@ -20,7 +20,7 @@ Model::~Model() {
   vkFreeMemory(vkEngineDevice.device(), vertexBufferMemory, nullptr);
   if (hasIndexBuffer) {
     vkDestroyBuffer(vkEngineDevice.device(), indexBuffer, nullptr);
-    vkFreeMemory(vkEngineDevice.device(), vertexBufferMemory, nullptr);
+    vkFreeMemory(vkEngineDevice.device(), indexBufferMemory, nullptr);
   }
 }
 
