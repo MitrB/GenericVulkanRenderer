@@ -71,6 +71,8 @@ void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::v
 
   pipeline->bind(commandBuffer);
 
+  auto projecionView= camera.getProjection() * camera.getView();
+
   for (auto &obj : gameObjects) {
     // TODO:
     obj.transform.rotation.z = glm::mod(obj.transform.rotation.z + 0.009f, glm::two_pi<float>());
@@ -79,7 +81,7 @@ void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::v
 
     SimplePushConstantData push{};
     push.color = obj.color;
-    push.transform = camera.getProjection() * obj.transform.mat4();
+    push.transform = projecionView * obj.transform.mat4();
 
     vkCmdPushConstants(commandBuffer, pipelineLayout,
                        VK_SHADER_STAGE_VERTEX_BIT |
