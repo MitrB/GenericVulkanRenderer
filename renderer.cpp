@@ -1,9 +1,11 @@
 #include "renderer.hpp"
 #include "device.hpp"
+#include "swap_chain.hpp"
 #include "window.hpp"
 
 #include <array>
 #include <cassert>
+#include <memory>
 #include <stdexcept>
 
 namespace vkEngine {
@@ -28,8 +30,15 @@ void VkEngineRenderer::recreateSwapchain() {
     vkEngineSwapChain =
         std::make_unique<VkEngineSwapChain>(vkEngineDevice, extent);
   } else {
+    std::shared_ptr<VkEngineSwapChain> oldSwapChain =
+        std::move(vkEngineSwapChain);
     vkEngineSwapChain = std::make_unique<VkEngineSwapChain>(
-        vkEngineDevice, extent, std::move(vkEngineSwapChain));
+        vkEngineDevice, extent, oldSwapChain);
+    
+    if (!oldSwapChain->compareSwapFormats(*vkEngineSwapChain.get())) {
+      throw std::runtime_error("Swap Chain image or depth format has changed");
+    }
+
     if (vkEngineSwapChain->imageCount() != commandBuffers.size()) {
       freeCommandBuffers();
       createCommandBuffers();
@@ -98,8 +107,7 @@ void VkEngineRenderer::endFrame() {
       window.wasWindowResized()) {
     window.resetWindowResizedFlag();
     recreateSwapchain();
-  }
-  else if (result != VK_SUCCESS) {
+  } else if (result != VK_SUCCESS) {
     throw std::runtime_error("failed to present swapchain image");
   }
 
