@@ -9,6 +9,7 @@
 #include <cmath>
 #include <cstdint>
 #include <glm/fwd.hpp>
+#include <glm/gtc/constants.hpp>
 #include <memory>
 #include <stdexcept>
 #include <vector>
@@ -64,17 +65,31 @@ void App::sierpinski(std::vector<Model::Vertex> &vertices, int depth,
 }
 
 void App::loadGameObjects() {
-  std::vector<Model::Vertex> vertices{{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-                                      {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-                                      {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
-  auto model = std::make_shared<Model>(vkEngineDevice, vertices);
-
-  auto triangle = vkEngineGameObject::createGameObject();
-  triangle.model = model;
-  triangle.color = {.1f, .8f, .1f};
-  triangle.transform2d.translation.x = .2f;
-
-  gameObject.push_back(std::move(triangle));
+  std::vector<Model::Vertex> vertices{
+      {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+      {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+      {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
+  auto lveModel = std::make_shared<Model>(vkEngineDevice, vertices);
+    
+  // https://www.color-hex.com/color-palette/5361
+  std::vector<glm::vec3> colors{
+      {1.f, .7f, .73f},
+      {1.f, .87f, .73f},
+      {1.f, 1.f, .73f},
+      {.73f, 1.f, .8f},
+      {.73, .88f, 1.f}  //
+  };
+  for (auto& color : colors) {
+    color = glm::pow(color, glm::vec3{2.2f});
+  }
+  for (int i = 0; i < 40; i++) {
+    auto triangle = vkEngineGameObject::createGameObject();
+    triangle.model = lveModel;
+    triangle.transform2d.scale = glm::vec2(.5f) + i * 0.025f;
+    triangle.transform2d.rotation = i * glm::pi<float>() * .0025f;
+    triangle.color = colors[i % colors.size()];
+    gameObjects.push_back(std::move(triangle));
+  }
 }
 
 void App::createPipelineLayout() {
@@ -204,10 +219,20 @@ void App::recordCommandBuffer(int imageIndex) {
 }
 
 void App::renderGameObjects(VkCommandBuffer commandBuffer) {
+
+ int i = 0;
+  for (auto& obj : gameObjects) {
+    i += 1;
+    obj.transform2d.rotation =
+        glm::mod<float>(obj.transform2d.rotation + 0.001f * i, 2.f * glm::pi<float>());
+  }
+
   pipeline->bind(commandBuffer);
 
-  for (auto& obj: gameObject) {
-        SimplePushConstantData push{};
+  for (auto &obj : gameObjects) {
+    obj.transform2d.rotation = glm::mod(obj.transform2d.rotation + 0.01f, glm::two_pi<float>());
+
+    SimplePushConstantData push{};
     push.offset = obj.transform2d.translation;
     push.color = obj.color;
     push.transform = obj.transform2d.mat2();

@@ -50,7 +50,7 @@ private:
   std::unique_ptr<Pipeline> pipeline;
   VkPipelineLayout pipelineLayout;
   std::vector<VkCommandBuffer> commandBuffers;
-  std::vector<vkEngineGameObject> gameObject;
+  std::vector<vkEngineGameObject> gameObjects;
 };
 
 } // namespace vkEngine
