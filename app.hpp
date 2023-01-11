@@ -3,7 +3,7 @@
 #include "device.hpp"
 #include "model.hpp"
 #include "pipeline.hpp"
-#include "swap_chain.hpp"
+#include "renderer.hpp"
 #include "window.hpp"
 #include "game_object.hpp"
 
@@ -30,11 +30,6 @@ private:
   void loadGameObjects();
   void createPipelineLayout();
   void createPipeline();
-  void createCommandBuffers();
-  void freeCommandBuffers();
-  void drawFrame();
-  void recreateSwapchain();
-  void recordCommandBuffer(int imageIndex);
   void renderGameObjects(VkCommandBuffer commandBuffer);
 
   void sierpinski(
@@ -46,10 +41,9 @@ private:
 
   Window window{WIDTH, HEIGHT, "Vulkan Engine"};
   VkEngineDevice vkEngineDevice{window};
-  std::unique_ptr<VkEngineSwapChain> vkEngineSwapChain;
+  VkEngineRenderer vkEngineRenderer{window, vkEngineDevice};
   std::unique_ptr<Pipeline> pipeline;
   VkPipelineLayout pipelineLayout;
-  std::vector<VkCommandBuffer> commandBuffers;
   std::vector<vkEngineGameObject> gameObjects;
 };
 
