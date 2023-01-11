@@ -73,7 +73,8 @@ void App::run() {
 }
 // temporary helper function, creates a 1x1x1 cube centered at offset
 std::unique_ptr<Model> createCubeModel(VkEngineDevice& device, glm::vec3 offset) {
-  std::vector<Model::Vertex> vertices{
+  Model::Builder modelBuilder{};
+  modelBuilder.vertices = {
 
       // left face (white)
       {{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
@@ -124,10 +125,10 @@ std::unique_ptr<Model> createCubeModel(VkEngineDevice& device, glm::vec3 offset)
       {{.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
 
   };
-  for (auto& v : vertices) {
+  for (auto& v : modelBuilder.vertices) {
     v.position += offset;
   }
-  return std::make_unique<Model>(device, vertices);
+  return std::make_unique<Model>(device, modelBuilder);
 }
 
 void App::loadGameObjects() {
