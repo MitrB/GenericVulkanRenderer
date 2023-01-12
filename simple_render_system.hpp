@@ -2,8 +2,9 @@
 
 #include "camera.hpp"
 #include "device.hpp"
-#include "pipeline.hpp"
+#include "frame_info.hpp"
 #include "game_object.hpp"
+#include "pipeline.hpp"
 
 // std
 #include <memory>
@@ -19,7 +20,8 @@ public:
   SimpleRenderSystem(const SimpleRenderSystem &) = delete;
   SimpleRenderSystem &operator=(const SimpleRenderSystem &) = delete;
 
-  void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<VkEngineGameObject> &gameObjects, const VkEngineCamera &camera);
+  void renderGameObjects(FrameInfo &frameInfo, std::vector<VkEngineGameObject> &gameObjects);
+                         
 
 private:
   void createPipelineLayout();
@@ -31,4 +33,4 @@ private:
   VkPipelineLayout pipelineLayout;
 };
 
-}
+} // namespace vkEngine

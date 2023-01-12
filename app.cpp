@@ -1,10 +1,13 @@
 #include "app.hpp"
+#include "buffer.hpp"
 #include "camera.hpp"
 #include "device.hpp"
+#include "frame_info.hpp"
 #include "game_object.hpp"
 #include "keyboard_movement_controller.hpp"
 #include "model.hpp"
 #include "simple_render_system.hpp"
+#include "swap_chain.hpp"
 
 // std
 #include <array>
@@ -12,12 +15,14 @@
 #include <cstdint>
 #include <glm/detail/qualifier.hpp>
 #include <glm/ext/scalar_constants.hpp>
+#include <glm/geometric.hpp>
 #include <glm/trigonometric.hpp>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <utility>
 #include <vector>
+#include <vulkan/vulkan_core.h>
 
 // libs
 #define GLM_FORCE_RADIANS
@@ -27,6 +32,11 @@
 
 namespace vkEngine {
 
+struct GlobalUbo {
+  glm::mat4 projecionView{1.f};
+  glm::vec3 lightDirection = glm::normalize(glm::vec3{1.f, -3.f, -1.f});
+};
+
 App::App() { loadGameObjects(); }
 
 App::~App() {}
@@ -35,6 +45,17 @@ void App::run() {
   // for (VkEngineGameObject &object : gameObjects) {
   //   std::cout << object.getId() << std::endl;
   // }
+
+  VkEngineBuffer globalUboBuffer{
+      vkEngineDevice,
+      sizeof(GlobalUbo),
+      VkEngineSwapChain::MAX_FRAMES_IN_FLIGHT,
+      VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+      vkEngineDevice.properties.limits.minUniformBufferOffsetAlignment,
+  };
+  globalUboBuffer.map();
+
   SimpleRenderSystem simpleRenderSystem(
       vkEngineDevice, vkEngineRenderer.getSwapChainrenderPass());
 
@@ -65,8 +86,18 @@ void App::run() {
     camera.setPerspectiveProjection(glm::radians(50.f), aspect, .1f, 10.f);
 
     if (auto commandBuffer = vkEngineRenderer.beginFrame()) {
+      int frameIndex = vkEngineRenderer.getFrameIndex();
+      FrameInfo frameInfo{frameIndex, delta, commandBuffer, camera};
+
+      // update
+      GlobalUbo ubo{};
+      ubo.projecionView = camera.getProjection() * camera.getView();
+      globalUboBuffer.writeToIndex(&ubo, frameIndex);
+      globalUboBuffer.flushIndex(frameIndex);
+
+      // render
       vkEngineRenderer.beginSwapChainrenderPass(commandBuffer);
-      simpleRenderSystem.renderGameObjects(commandBuffer, gameObjects, camera);
+      simpleRenderSystem.renderGameObjects(frameInfo, gameObjects);
       vkEngineRenderer.endSwapChainrenderPass(commandBuffer);
       vkEngineRenderer.endFrame();
     }
@@ -189,14 +220,18 @@ std::unique_ptr<Model> createCubeModelIndexed(VkEngineDevice &device,
 }
 
 void App::loadGameObjects() {
-  std::shared_ptr<Model> gameObjectModel = Model::createModelFromFile(vkEngineDevice, "models/viking_room.obj");
-  // std::shared_ptr<Model> gameObjectModel = Model::createModelFromFile(vkEngineDevice, "models/smooth_vase.obj");
-  // std::shared_ptr<Model> gameObjectModel = createCubeModelIndexed(vkEngineDevice, glm::vec3{0.f, 0.f, 0.f});
+  std::shared_ptr<Model> gameObjectModel =
+      Model::createModelFromFile(vkEngineDevice, "models/viking_room.obj");
+  // std::shared_ptr<Model> gameObjectModel =
+  // Model::createModelFromFile(vkEngineDevice, "models/smooth_vase.obj");
+  // std::shared_ptr<Model> gameObjectModel =
+  // createCubeModelIndexed(vkEngineDevice, glm::vec3{0.f, 0.f, 0.f});
   auto gObj = VkEngineGameObject::createGameObject();
   gObj.model = gameObjectModel;
   gObj.transform.translation = {.0f, .0f, 2.5f};
   gObj.transform.scale = glm::vec3{3.f};
-  gObj.transform.rotation = glm::vec3{glm::half_pi<float>(), glm::half_pi<float>(), 0.f};
+  gObj.transform.rotation =
+      glm::vec3{glm::half_pi<float>(), glm::half_pi<float>(), 0.f};
 
   // auto cube2 = VkEngineGameObject::createGameObject();
   // cube2.model = cubeModel;
