@@ -2,7 +2,6 @@
 #include "device.hpp"
 #include "utils.hpp"
 
-
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -17,23 +16,23 @@
 
 // std
 #include <cassert>
-#include <unordered_map>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <iostream>
+#include <unordered_map>
 #include <vulkan/vulkan_core.h>
 
 namespace std {
-template <>
-struct hash<vkEngine::Model::Vertex> {
+template <> struct hash<vkEngine::Model::Vertex> {
   size_t operator()(vkEngine::Model::Vertex const &vertex) const {
     size_t seed = 0;
-    vkEngine::hashCombine(seed, vertex.position, vertex.color, vertex.normal, vertex.uv);
+    vkEngine::hashCombine(seed, vertex.position, vertex.color, vertex.normal,
+                          vertex.uv);
     return seed;
   }
 };
-}
+} // namespace std
 
 namespace vkEngine {
 
@@ -142,7 +141,7 @@ void Model::bind(VkCommandBuffer commandBuffer) {
 
 std::vector<VkVertexInputBindingDescription>
 Model::Vertex::getBindingDescriptions() {
-  std::vector<VkVertexInputBindingDescription> bindingDescriptions(1);
+  std::vector<VkVertexInputBindingDescription> bindingDescriptions{1};
   bindingDescriptions[0].binding = 0;
   bindingDescriptions[0].stride = sizeof(Vertex);
   bindingDescriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
@@ -151,16 +150,13 @@ Model::Vertex::getBindingDescriptions() {
 
 std::vector<VkVertexInputAttributeDescription>
 Model::Vertex::getAttributeDescriptions() {
-  std::vector<VkVertexInputAttributeDescription> attributeDescriptions(2);
-  attributeDescriptions[0].binding = 0;
-  attributeDescriptions[0].location = 0;
-  attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-  attributeDescriptions[0].offset = 0;
+  std::vector<VkVertexInputAttributeDescription> attributeDescriptions{};
 
-  attributeDescriptions[1].binding = 0;
-  attributeDescriptions[1].location = 1;
-  attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-  attributeDescriptions[1].offset = offsetof(Vertex, color);
+  attributeDescriptions.push_back({0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, position)});
+  attributeDescriptions.push_back({1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, color)});
+  attributeDescriptions.push_back({2, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, normal)});
+  attributeDescriptions.push_back({3, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, uv)}); // textures only have 2 components
+
   return attributeDescriptions;
 }
 
@@ -170,7 +166,8 @@ void Model::Builder::loadModel(const std::string &filepath) {
   std::vector<tinyobj::material_t> materials;
   std::string warn, err;
 
-  if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filepath.c_str())) {
+  if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err,
+                        filepath.c_str())) {
     throw std::runtime_error(warn + err);
   }
 
@@ -189,16 +186,11 @@ void Model::Builder::loadModel(const std::string &filepath) {
             attrib.vertices[3 * index.vertex_index + 2],
         };
 
-        auto colorIndex = 3 * index.vertex_index + 2;
-        if (colorIndex < attrib.colors.size()) {
-          vertex.color = {
-              attrib.colors[colorIndex - 2],
-              attrib.colors[colorIndex - 1],
-              attrib.colors[colorIndex - 0],
-          };
-        } else {
-          vertex.color = {1.f, 1.f, 1.f};  // set default color
-        }
+        vertex.color = {
+            attrib.colors[3 * index.vertex_index + 0],
+            attrib.colors[3 * index.vertex_index + 1],
+            attrib.colors[3 * index.vertex_index + 2],
+        };
       }
 
       if (index.normal_index >= 0) {

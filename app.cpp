@@ -10,6 +10,8 @@
 #include <array>
 #include <chrono>
 #include <cstdint>
+#include <glm/detail/qualifier.hpp>
+#include <glm/ext/scalar_constants.hpp>
 #include <glm/trigonometric.hpp>
 #include <iostream>
 #include <memory>
@@ -188,11 +190,13 @@ std::unique_ptr<Model> createCubeModelIndexed(VkEngineDevice &device,
 
 void App::loadGameObjects() {
   std::shared_ptr<Model> gameObjectModel = Model::createModelFromFile(vkEngineDevice, "models/viking_room.obj");
+  // std::shared_ptr<Model> gameObjectModel = Model::createModelFromFile(vkEngineDevice, "models/smooth_vase.obj");
   // std::shared_ptr<Model> gameObjectModel = createCubeModelIndexed(vkEngineDevice, glm::vec3{0.f, 0.f, 0.f});
   auto gObj = VkEngineGameObject::createGameObject();
   gObj.model = gameObjectModel;
   gObj.transform.translation = {.0f, .0f, 2.5f};
   gObj.transform.scale = glm::vec3{3.f};
+  gObj.transform.rotation = glm::vec3{glm::half_pi<float>(), glm::half_pi<float>(), 0.f};
 
   // auto cube2 = VkEngineGameObject::createGameObject();
   // cube2.model = cubeModel;
