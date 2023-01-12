@@ -187,18 +187,18 @@ std::unique_ptr<Model> createCubeModelIndexed(VkEngineDevice &device,
 }
 
 void App::loadGameObjects() {
-  std::shared_ptr<Model> cubeModel = Model::createModelFromFile(vkEngineDevice, "models/colored_cube.obj");
-  auto cube1 = VkEngineGameObject::createGameObject();
-  cube1.model = cubeModel;
-  cube1.transform.translation = {.0f, .0f, 2.5f};
-  cube1.transform.scale = {.5f, .5f, .5f};
+  std::shared_ptr<Model> gameObjectModel = Model::createModelFromFile(vkEngineDevice, "models/viking_room.obj");
+  auto gObj = VkEngineGameObject::createGameObject();
+  gObj.model = gameObjectModel;
+  gObj.transform.translation = {.0f, .0f, 2.5f};
+  gObj.transform.scale = glm::vec3{3.f};
 
   // auto cube2 = VkEngineGameObject::createGameObject();
   // cube2.model = cubeModel;
   // cube2.transform.translation = {-.5f, .0f, .5f};
   // cube2.transform.scale = {.5f, .3f, .5f};
   // gameObjects.push_back(std::move(cube2));
-  gameObjects.push_back(std::move(cube1));
+  gameObjects.push_back(std::move(gObj));
 }
 
 } // namespace vkEngine

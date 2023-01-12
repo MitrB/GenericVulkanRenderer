@@ -1,5 +1,8 @@
 #include "model.hpp"
 #include "device.hpp"
+#include "utils.hpp"
+
+
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -9,14 +12,28 @@
 // https://github.com/tinyobjloader/tinyobjloader/blob/release/tiny_obj_loader.h
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/hash.hpp>
 
 // std
 #include <cassert>
+#include <unordered_map>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <iostream>
 #include <vulkan/vulkan_core.h>
+
+namespace std {
+template <>
+struct hash<vkEngine::Model::Vertex> {
+  size_t operator()(vkEngine::Model::Vertex const &vertex) const {
+    size_t seed = 0;
+    vkEngine::hashCombine(seed, vertex.position, vertex.color, vertex.normal, vertex.uv);
+    return seed;
+  }
+};
+}
 
 namespace vkEngine {
 
@@ -160,7 +177,7 @@ void Model::Builder::loadModel(const std::string &filepath) {
   vertices.clear();
   indices.clear();
 
-  // std::unordered_map<Vertex, uint32_t> uniqueVertices{};
+  std::unordered_map<Vertex, uint32_t> uniqueVertices{};
   for (const auto &shape : shapes) {
     for (const auto &index : shape.mesh.indices) {
       Vertex vertex{};
@@ -199,11 +216,11 @@ void Model::Builder::loadModel(const std::string &filepath) {
         };
       }
 
-      // if (uniqueVertices.count(vertex) == 0) {
-      //   uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
+      if (uniqueVertices.count(vertex) == 0) {
+        uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
         vertices.push_back(vertex);
-      // }
-      // indices.push_back(uniqueVertices[vertex]);
+      }
+      indices.push_back(uniqueVertices[vertex]);
     }
   }
 }
