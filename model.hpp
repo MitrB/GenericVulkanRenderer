@@ -1,6 +1,8 @@
 #pragma once
 
 #include "device.hpp"
+#include "buffer.hpp"
+
 #include <vector>
 #include <vulkan/vulkan_core.h>
 #include <memory>
@@ -52,13 +54,11 @@ private:
 
   VkEngineDevice &vkEngineDevice;
 
-  VkBuffer vertexBuffer;
-  VkDeviceMemory vertexBufferMemory;
+  std::unique_ptr<VkEngineBuffer> vertexBuffer;
   uint32_t vertexCount;
 
   bool hasIndexBuffer = false;
-  VkBuffer indexBuffer;
-  VkDeviceMemory indexBufferMemory;
+  std::unique_ptr<VkEngineBuffer> indexBuffer;
   uint32_t indexCount;
 };
 
