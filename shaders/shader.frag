@@ -3,8 +3,9 @@
 layout (location = 0) in vec3 fragColor;
 layout(location = 0) out vec4 outColor;
 
+// push constant is limited to 128 bytes of memory
 layout(push_constant) uniform Push {
-	mat4 transform; // projection * view * model
+	mat4 modelMatrix;
 	mat4 normalMatrix;
 } push;
 

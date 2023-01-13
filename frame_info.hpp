@@ -2,6 +2,7 @@
 #pragma once
 
 #include "camera.hpp"
+#include "descriptors.hpp"
 
 // lib
 #include <vulkan/vulkan.h>
@@ -12,5 +13,6 @@ struct FrameInfo {
   float frameTime;
   VkCommandBuffer commandBuffer;
   VkEngineCamera &camera;
+  VkDescriptorSet globalDescriptorSet;
 };
 }  // namespace vkEngine

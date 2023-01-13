@@ -20,7 +20,9 @@
 #include <glm/trigonometric.hpp>
 #include <iostream>
 #include <memory>
+#include <sstream>
 #include <stdexcept>
+#include <type_traits>
 #include <utility>
 #include <vector>
 #include <vulkan/vulkan_core.h>
@@ -79,7 +81,8 @@ void App::run() {
   }
 
   SimpleRenderSystem simpleRenderSystem(
-      vkEngineDevice, vkEngineRenderer.getSwapChainrenderPass());
+      vkEngineDevice, vkEngineRenderer.getSwapChainrenderPass(),
+      globalSetLayout->getDescriptorSetLayout());
 
   VkEngineCamera camera{};
   camera.setViewTarget(glm::vec3{-1.f, -2.f, 2.f}, glm::vec3{0.f, 0.f, 2.5f});
@@ -97,6 +100,9 @@ void App::run() {
                       .count();
     currentTime = newTime;
 
+    // calc framerate
+    calculateFrameRate(delta);
+
     delta = glm::min(delta, MAX_FRAME_TIME);
 
     cameraController.moveInPlaneXZ(window.getGLFWwindow(), delta, viewerObject);
@@ -109,7 +115,8 @@ void App::run() {
 
     if (auto commandBuffer = vkEngineRenderer.beginFrame()) {
       int frameIndex = vkEngineRenderer.getFrameIndex();
-      FrameInfo frameInfo{frameIndex, delta, commandBuffer, camera};
+      FrameInfo frameInfo{frameIndex, delta, commandBuffer, camera,
+                          globalDescriptorSets[frameIndex]};
 
       // update
       GlobalUbo ubo{};
@@ -261,6 +268,21 @@ void App::loadGameObjects() {
   // cube2.transform.scale = {.5f, .3f, .5f};
   // gameObjects.push_back(std::move(cube2));
   gameObjects.push_back(std::move(gObj));
+}
+
+void App::calculateFrameRate(float delta) {
+  numFrames++;
+  timePassed += delta;
+  if (timePassed >= 1) {
+    int framerate = numFrames / timePassed;
+    std::stringstream title;
+    title << "Running at " << framerate << " fps.";
+    glfwSetWindowTitle(window.getGLFWwindow(), title.str().c_str());
+    numFrames = 0;
+    timePassed -= 1;
+    // frameTime = float(1000.0 / framerate);
+  }
+
 }
 
 } // namespace vkEngine

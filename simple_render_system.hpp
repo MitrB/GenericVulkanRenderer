@@ -14,7 +14,7 @@
 namespace vkEngine {
 class SimpleRenderSystem {
 public:
-  SimpleRenderSystem(VkEngineDevice &device, VkRenderPass renderPass);
+  SimpleRenderSystem(VkEngineDevice &device, VkRenderPass renderPass, VkDescriptorSetLayout descriptorSetLayout);
   ~SimpleRenderSystem();
 
   SimpleRenderSystem(const SimpleRenderSystem &) = delete;
@@ -24,7 +24,7 @@ public:
                          
 
 private:
-  void createPipelineLayout();
+  void createPipelineLayout(VkDescriptorSetLayout descriptorSetLayout);
   void createPipeline(VkRenderPass renderPass);
 
   VkEngineDevice &vkEngineDevice;

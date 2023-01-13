@@ -28,6 +28,10 @@ public:
   void run();
 
 private:
+  void calculateFrameRate(float delta); 
+  float timePassed = 0;
+  int numFrames = 0;
+
   float MAX_FRAME_TIME = 0.1f;
   void loadGameObjects();
 
