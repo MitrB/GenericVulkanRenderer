@@ -1,6 +1,7 @@
 #include "app.hpp"
 #include "buffer.hpp"
 #include "camera.hpp"
+#include "descriptors.hpp"
 #include "device.hpp"
 #include "frame_info.hpp"
 #include "game_object.hpp"
@@ -37,7 +38,14 @@ struct GlobalUbo {
   glm::vec3 lightDirection = glm::normalize(glm::vec3{1.f, -3.f, -1.f});
 };
 
-App::App() { loadGameObjects(); }
+App::App() {
+  globalPool = VkEngineDescriptorPool::Builder(vkEngineDevice)
+                   .setMaxSets(VkEngineSwapChain::MAX_FRAMES_IN_FLIGHT)
+                   .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                                VkEngineSwapChain::MAX_FRAMES_IN_FLIGHT)
+                   .build();
+  loadGameObjects();
+}
 
 App::~App() {}
 
@@ -46,15 +54,28 @@ void App::run() {
   //   std::cout << object.getId() << std::endl;
   // }
 
-  std::vector<std::unique_ptr<VkEngineBuffer>> uboBuffers(VkEngineSwapChain::MAX_FRAMES_IN_FLIGHT);
+  std::vector<std::unique_ptr<VkEngineBuffer>> uboBuffers(
+      VkEngineSwapChain::MAX_FRAMES_IN_FLIGHT);
   for (int i = 0; i < uboBuffers.size(); i++) {
-    uboBuffers[i] = std::make_unique<VkEngineBuffer>(
-        vkEngineDevice,
-        sizeof(GlobalUbo),
-        1,
-        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+    uboBuffers[i] =
+        std::make_unique<VkEngineBuffer>(vkEngineDevice, sizeof(GlobalUbo), 1,
+                                         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
     uboBuffers[i]->map();
+  }
+
+  auto globalSetLayout = VkEngineDescriptorSetLayout::Builder(vkEngineDevice)
+                             .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                                         VK_SHADER_STAGE_VERTEX_BIT)
+                             .build();
+
+  std::vector<VkDescriptorSet> globalDescriptorSets(
+      VkEngineSwapChain::MAX_FRAMES_IN_FLIGHT);
+  for (int i = 0; i < globalDescriptorSets.size(); i++) {
+    auto bufferInfo = uboBuffers[i]->descriptorInfo();
+    VkEngineDescriptorWriter(*globalSetLayout, *globalPool)
+        .writeBuffer(0, &bufferInfo)
+        .build(globalDescriptorSets[i]);
   }
 
   SimpleRenderSystem simpleRenderSystem(

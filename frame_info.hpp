@@ -13,4 +13,4 @@ struct FrameInfo {
   VkCommandBuffer commandBuffer;
   VkEngineCamera &camera;
 };
-}  // namespace lve
+}  // namespace vkEngine

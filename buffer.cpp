@@ -198,4 +198,4 @@ VkResult VkEngineBuffer::invalidateIndex(int index) {
   return invalidate(alignmentSize, index * alignmentSize);
 }
 
-}  // namespace lve
+}  // namespace vkEngine

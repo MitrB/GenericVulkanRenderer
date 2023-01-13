@@ -5,6 +5,7 @@
 #include "renderer.hpp"
 #include "window.hpp"
 #include "game_object.hpp"
+#include "descriptors.hpp"
 
 // std
 #include <chrono>
@@ -30,16 +31,12 @@ private:
   float MAX_FRAME_TIME = 0.1f;
   void loadGameObjects();
 
-  void sierpinski(
-    std::vector<Model::Vertex> &vertices,
-    int depth,
-    glm::vec2 left,
-    glm::vec2 right,
-    glm::vec2 top);
-
   Window window{WIDTH, HEIGHT, "Vulkan Engine"};
   VkEngineDevice vkEngineDevice{window};
   VkEngineRenderer vkEngineRenderer{window, vkEngineDevice};
+
+  // order of declerations matter
+  std::unique_ptr<VkEngineDescriptorPool> globalPool{};
   std::vector<VkEngineGameObject> gameObjects;
 };
 

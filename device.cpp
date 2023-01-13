@@ -531,4 +531,4 @@ void VkEngineDevice::createImageWithInfo(
   }
 }
 
-}  // namespace lve
+}  // namespace vkEngine

@@ -11,4 +11,4 @@ void hashCombine(std::size_t& seed, const T& v, const Rest&... rest) {
   (hashCombine(seed, rest), ...);
 };
 
-}  // namespace lve
+}  // namespace vkEngine
