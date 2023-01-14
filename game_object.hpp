@@ -8,6 +8,7 @@
 
 // std
 #include <memory>
+#include <unordered_map>
 
 namespace vkEngine {
 
@@ -25,6 +26,7 @@ struct TransformComponent {
 class VkEngineGameObject {
 public:
   using id_t = unsigned int;
+  using Map = std::unordered_map<id_t, VkEngineGameObject>;
 
   static VkEngineGameObject createGameObject() {
     static id_t currentId = 0;

@@ -71,7 +71,7 @@ void App::run() {
 
   auto globalSetLayout = VkEngineDescriptorSetLayout::Builder(vkEngineDevice)
                              .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                                         VK_SHADER_STAGE_VERTEX_BIT)
+                                         VK_SHADER_STAGE_ALL_GRAPHICS)
                              .build();
 
   std::vector<VkDescriptorSet> globalDescriptorSets(
@@ -119,7 +119,7 @@ void App::run() {
     if (auto commandBuffer = vkEngineRenderer.beginFrame()) {
       int frameIndex = vkEngineRenderer.getFrameIndex();
       FrameInfo frameInfo{frameIndex, delta, commandBuffer, camera,
-                          globalDescriptorSets[frameIndex]};
+                          globalDescriptorSets[frameIndex], gameObjects};
 
       // update
       GlobalUbo ubo{};
@@ -129,7 +129,7 @@ void App::run() {
 
       // render
       vkEngineRenderer.beginSwapChainrenderPass(commandBuffer);
-      simpleRenderSystem.renderGameObjects(frameInfo, gameObjects);
+      simpleRenderSystem.renderGameObjects(frameInfo);
       vkEngineRenderer.endSwapChainrenderPass(commandBuffer);
       vkEngineRenderer.endFrame();
     }
@@ -262,11 +262,10 @@ void App::loadGameObjects() {
   // createCubeModelIndexed(vkEngineDevice, glm::vec3{0.f, 0.f, 0.f});
   auto gObj = VkEngineGameObject::createGameObject();
   gObj.model = gameObjectModel;
-  gObj.transform.translation = {.0f, .0f, 0.f};
+  gObj.transform.translation = {.0f, 2.0f, 2.f};
   gObj.transform.scale = glm::vec3{3.f};
-  // gObj.transform.rotation = glm::vec3{glm::half_pi<float>(), glm::half_pi<float>(), 0.f};
-  gObj.transform.rotation = glm::vec3{.0f};
-  gameObjects.push_back(std::move(gObj));
+  gObj.transform.rotation = glm::vec3{glm::half_pi<float>(), glm::half_pi<float>(), 0.f};
+  gameObjects.emplace(gObj.getId(), std::move(gObj));
 
   // auto cube2 = VkEngineGameObject::createGameObject();
   // cube2.model = cubeModel;
@@ -279,7 +278,7 @@ void App::loadGameObjects() {
   gObj.transform.scale = glm::vec3{3.f};
   // gObj.transform.rotation = glm::vec3{glm::half_pi<float>(), glm::half_pi<float>(), 0.f};
   gObj.transform.rotation = glm::vec3{.0f};
-  gameObjects.push_back(std::move(gObj));
+  gameObjects.emplace(gObj.getId(), std::move(gObj));
 }
 
 void App::calculateFrameRate(float delta) {

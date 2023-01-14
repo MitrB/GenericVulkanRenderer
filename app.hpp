@@ -41,7 +41,7 @@ private:
 
   // order of declerations matter
   std::unique_ptr<VkEngineDescriptorPool> globalPool{};
-  std::vector<VkEngineGameObject> gameObjects;
+  VkEngineGameObject::Map gameObjects;
 };
 
 } // namespace vkEngine

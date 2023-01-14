@@ -2,7 +2,7 @@
 #pragma once
 
 #include "camera.hpp"
-#include "descriptors.hpp"
+#include "game_object.hpp"
 
 // lib
 #include <vulkan/vulkan.h>
@@ -14,5 +14,6 @@ struct FrameInfo {
   VkCommandBuffer commandBuffer;
   VkEngineCamera &camera;
   VkDescriptorSet globalDescriptorSet;
+  VkEngineGameObject::Map &gameObject;
 };
 }  // namespace vkEngine
