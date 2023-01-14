@@ -16,6 +16,7 @@
 #include <cstdint>
 #include <glm/detail/qualifier.hpp>
 #include <glm/ext/scalar_constants.hpp>
+#include <glm/fwd.hpp>
 #include <glm/geometric.hpp>
 #include <glm/trigonometric.hpp>
 #include <iostream>
@@ -37,7 +38,9 @@ namespace vkEngine {
 
 struct GlobalUbo {
   glm::mat4 projecionView{1.f};
-  glm::vec3 lightDirection = glm::normalize(glm::vec3{1.f, -3.f, -1.f});
+  glm::vec4 ambientLightColor{1.f, 1.f, 1.f, .02f};
+  glm::vec3 lightPosition{1.f};
+  alignas(16) glm::vec4 lightColor{1.f};
 };
 
 App::App() {
@@ -111,7 +114,7 @@ void App::run() {
 
     float aspect = vkEngineRenderer.getAspectRatio();
     // camera.setOrthographicProjection(-aspect, aspect, -1, 1, -1, 1);
-    camera.setPerspectiveProjection(glm::radians(50.f), aspect, .1f, 10.f);
+    camera.setPerspectiveProjection(glm::radians(50.f), aspect, .1f, 100.f);
 
     if (auto commandBuffer = vkEngineRenderer.beginFrame()) {
       int frameIndex = vkEngineRenderer.getFrameIndex();
@@ -251,22 +254,31 @@ std::unique_ptr<Model> createCubeModelIndexed(VkEngineDevice &device,
 void App::loadGameObjects() {
   std::shared_ptr<Model> gameObjectModel =
       Model::createModelFromFile(vkEngineDevice, "models/viking_room.obj");
+  std::shared_ptr<Model> quadModel =
+      Model::createModelFromFile(vkEngineDevice, "models/quad.obj");
   // std::shared_ptr<Model> gameObjectModel =
   // Model::createModelFromFile(vkEngineDevice, "models/smooth_vase.obj");
   // std::shared_ptr<Model> gameObjectModel =
   // createCubeModelIndexed(vkEngineDevice, glm::vec3{0.f, 0.f, 0.f});
   auto gObj = VkEngineGameObject::createGameObject();
   gObj.model = gameObjectModel;
-  gObj.transform.translation = {.0f, .0f, 2.5f};
+  gObj.transform.translation = {.0f, .0f, 0.f};
   gObj.transform.scale = glm::vec3{3.f};
-  gObj.transform.rotation =
-      glm::vec3{glm::half_pi<float>(), glm::half_pi<float>(), 0.f};
+  // gObj.transform.rotation = glm::vec3{glm::half_pi<float>(), glm::half_pi<float>(), 0.f};
+  gObj.transform.rotation = glm::vec3{.0f};
+  gameObjects.push_back(std::move(gObj));
 
   // auto cube2 = VkEngineGameObject::createGameObject();
   // cube2.model = cubeModel;
   // cube2.transform.translation = {-.5f, .0f, .5f};
   // cube2.transform.scale = {.5f, .3f, .5f};
   // gameObjects.push_back(std::move(cube2));
+  gObj = VkEngineGameObject::createGameObject();
+  gObj.model = quadModel;
+  gObj.transform.translation = {.0f, 5.0f, 0.f};
+  gObj.transform.scale = glm::vec3{3.f};
+  // gObj.transform.rotation = glm::vec3{glm::half_pi<float>(), glm::half_pi<float>(), 0.f};
+  gObj.transform.rotation = glm::vec3{.0f};
   gameObjects.push_back(std::move(gObj));
 }
 
