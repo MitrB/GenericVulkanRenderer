@@ -128,7 +128,7 @@ file(GLOB_RECURSE GLSL_SOURCE_FILES
 )
 
 foreach(GLSL ${GLSL_SOURCE_FILES})
-  get_filename_component(FILE_NAME ${GLSL} NAME)
+	get_filename_component(FILE_NAME ${GLSL} LAST_EXT)
   set(SPIRV "${PROJECT_SOURCE_DIR}/shaders/${FILE_NAME}.spv")
   add_custom_command(
     OUTPUT ${SPIRV}

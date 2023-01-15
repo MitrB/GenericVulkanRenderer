@@ -72,8 +72,7 @@ void SimpleRenderSystem::createPipeline(VkRenderPass renderPass) {
                                         "shaders/frag.spv", pipelineConfig);
 }
 
-void SimpleRenderSystem::renderGameObjects(
-    FrameInfo &frameInfo) {
+void SimpleRenderSystem::renderGameObjects(FrameInfo &frameInfo) {
 
   pipeline->bind(frameInfo.commandBuffer);
 
@@ -83,7 +82,8 @@ void SimpleRenderSystem::renderGameObjects(
 
   for (auto &kvPair : frameInfo.gameObject) {
     auto &obj = kvPair.second;
-    if (obj.model == nullptr) continue; // Skip over no associated model object
+    if (obj.model == nullptr)
+      continue; // Skip over no associated model object
     SimplePushConstantData push{};
     push.modelMatrix = obj.transform.mat4();
     push.normalMatrix = obj.transform.normalMatrix();
