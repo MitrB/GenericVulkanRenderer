@@ -80,8 +80,8 @@ void Pipeline::createGraphicsPipeline(const std::string &vertFilepath,
   shaderStages[1].pNext = nullptr;
   shaderStages[1].pSpecializationInfo = nullptr;
 
-  auto bindingDescriptions = Model::Vertex::getBindingDescriptions();
-  auto attributedescriptions = Model::Vertex::getAttributeDescriptions();
+  auto& bindingDescriptions = configInfo.bindingDescription;
+  auto& attributedescriptions = configInfo.attributeDescription;
   VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
   vertexInputInfo.sType =
       VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -219,6 +219,9 @@ void Pipeline::defaultPipelineConfigInfo(PipelineConfigInfo& configInfo) {
   configInfo.dynamicStateInfo.dynamicStateCount =
       static_cast<uint32_t>(configInfo.dynamicStateEnables.size());
   configInfo.dynamicStateInfo.flags = 0;
+
+  configInfo.bindingDescription = Model::Vertex::getBindingDescriptions();
+  configInfo.attributeDescription = Model::Vertex::getAttributeDescriptions();
 }
 
 } // namespace vkEngine
