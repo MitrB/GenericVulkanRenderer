@@ -7,8 +7,9 @@
 #include "game_object.hpp"
 #include "keyboard_movement_controller.hpp"
 #include "model.hpp"
-#include "simple_render_system.hpp"
 #include "swap_chain.hpp"
+#include "systems/point_light_system.hpp"
+#include "systems/simple_render_system.hpp"
 
 // std
 #include <array>
@@ -88,6 +89,10 @@ void App::run() {
       vkEngineDevice, vkEngineRenderer.getSwapChainrenderPass(),
       globalSetLayout->getDescriptorSetLayout());
 
+  PointLightSystem pointLightSystem(
+      vkEngineDevice, vkEngineRenderer.getSwapChainrenderPass(),
+      globalSetLayout->getDescriptorSetLayout());
+
   VkEngineCamera camera{};
   camera.setViewTarget(glm::vec3{-1.f, -2.f, 2.f}, glm::vec3{0.f, 0.f, 2.5f});
 
@@ -115,12 +120,16 @@ void App::run() {
 
     float aspect = vkEngineRenderer.getAspectRatio();
     // camera.setOrthographicProjection(-aspect, aspect, -1, 1, -1, 1);
-    camera.setPerspectiveProjection(glm::radians(50.f), aspect, .1f, 100.f);
+    camera.setPerspectiveProjection(glm::radians(70.f), aspect, .1f, 100.f);
 
     if (auto commandBuffer = vkEngineRenderer.beginFrame()) {
       int frameIndex = vkEngineRenderer.getFrameIndex();
-      FrameInfo frameInfo{frameIndex, delta, commandBuffer, camera,
-                          globalDescriptorSets[frameIndex], gameObjects};
+      FrameInfo frameInfo{frameIndex,
+                          delta,
+                          commandBuffer,
+                          camera,
+                          globalDescriptorSets[frameIndex],
+                          gameObjects};
 
       // update
       GlobalUbo ubo{};
@@ -132,6 +141,7 @@ void App::run() {
       // render
       vkEngineRenderer.beginSwapChainrenderPass(commandBuffer);
       simpleRenderSystem.renderGameObjects(frameInfo);
+      pointLightSystem.render(frameInfo);
       vkEngineRenderer.endSwapChainrenderPass(commandBuffer);
       vkEngineRenderer.endFrame();
     }
@@ -145,19 +155,21 @@ void App::loadGameObjects() {
       Model::createModelFromFile(vkEngineDevice, "models/viking_room.obj");
   std::shared_ptr<Model> quadModel =
       Model::createModelFromFile(vkEngineDevice, "models/quad.obj");
-  
+
   auto gObj = VkEngineGameObject::createGameObject();
   gObj.model = gameObjectModel;
   gObj.transform.translation = {.0f, 2.0f, 2.f};
   gObj.transform.scale = glm::vec3{3.f};
-  gObj.transform.rotation = glm::vec3{glm::half_pi<float>(), glm::half_pi<float>(), 0.f};
+  gObj.transform.rotation =
+      glm::vec3{glm::half_pi<float>(), glm::half_pi<float>(), 0.f};
   gameObjects.emplace(gObj.getId(), std::move(gObj));
 
   gObj = VkEngineGameObject::createGameObject();
   gObj.model = quadModel;
   gObj.transform.translation = {.0f, 2.0f, 0.f};
   gObj.transform.scale = glm::vec3{3.f};
-  // gObj.transform.rotation = glm::vec3{glm::half_pi<float>(), glm::half_pi<float>(), 0.f};
+  // gObj.transform.rotation = glm::vec3{glm::half_pi<float>(),
+  // glm::half_pi<float>(), 0.f};
   gObj.transform.rotation = glm::vec3{.0f};
   gameObjects.emplace(gObj.getId(), std::move(gObj));
 }
@@ -174,7 +186,6 @@ void App::calculateFrameRate(float delta) {
     timePassed -= 1;
     // frameTime = float(1000.0 / framerate);
   }
-
 }
 
 } // namespace vkEngine
